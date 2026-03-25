@@ -17,8 +17,8 @@ CORS(app)
 # ==========================================
 # 🔑 INSERT YOUR API KEYS HERE
 # ==========================================
-GEMINI_API_KEY = "AIzaSyDPPT2ODIISibbCiVF3lFJ8MK3vpf46ero"
-MURF_API_KEY = "ap2_42efcb96-4137-49ab-b25e-8283e8f35544"
+GEMINI_API_KEY = "enter_gemini_api_key"
+MURF_API_KEY = "enter_murf_api_key"
 
 # Configure Gemini
 genai.configure(api_key=GEMINI_API_KEY)
