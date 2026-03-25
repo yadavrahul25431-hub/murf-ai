@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OG.sys | Bounty Tracker</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;800&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* ==========================================
+           FOUNDATION & VARIABLES
+           ========================================== */
+        :root {
+            --bg: #020813;
+            /* Deep ocean black/blue */
+            --text-main: #f5f5f7;
+            --text-muted: #8b9bb4;
+            --accent: #ffd700;
+            /* Pirate Gold */
+            --haki-glow: #ff0055;
+            /* Conqueror's Haki Red/Pink */
+            --danger: #ff453a;
+            --glass: rgba(10, 15, 25, 0.8);
+            --glass-border: rgba(255, 215, 0, 0.3);
+        }
+
+        body.theme-cyber {
+            --bg: #070a13;
+            --text-main: #e0faff;
+            --text-muted: #5e7c8f;
+            --accent: #00e5ff;
+            --haki-glow: #b000ff;
+            --danger: #ff003c;
+            --glass: rgba(0, 15, 30, 0.8);
+            --glass-border: rgba(0, 229, 255, 0.3);
+        }
+
+        body.theme-emerald {
+            --bg: #021008;
+            --text-main: #e6ffed;
+            --text-muted: #5a8a6b;
+            --accent: #00ff66;
+            --haki-glow: #eaff00;
+            --danger: #ff3300;
+            --glass: rgba(5, 25, 15, 0.8);
+            --glass-border: rgba(0, 255, 102, 0.3);
+        }
+
+        body.theme-crimson {
+            --bg: #120303;
+            --text-main: #ffebe6;
+            --text-muted: #8f5858;
+            --accent: #ff3333;
+            --haki-glow: #ffaa00;
+            --danger: #ff0000;
+            --glass: rgba(30, 5, 5, 0.8);
+            --glass-border: rgba(255, 51, 51, 0.3);
+        }
+
+        body, .app-container, .glass-card, .bubble.ai {
+            transition: background-color 0.8s ease, border-color 0.8s ease, color 0.8s ease;
+        }
+
+        @font-face {
+            font-family: 'SF Pro Display';
+            src: local('-apple-system'), local('BlinkMacSystemFont'), local('Segoe UI'), local('Roboto');
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            cursor: none !important;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Outfit', 'SF Pro Display', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            overflow-y: hidden;
+            /* Locked until login */
+        }
+
+        /* --- CUSTOM CURSOR (Gold/Haki Themed) --- */
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            position: fixed;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 100000;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 15px var(--accent);
+        }
+
+        .cursor-ring {
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--haki-glow);
+            position: fixed;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 99999;
+            transform: translate(-50%, -50%);
+            transition: width 0.2s, height 0.2s, border-color 0.2s;
+        }
+
+        .cursor-ring.hover-active {
+            width: 50px;
+            height: 50px;
+            border-color: var(--accent);
+            background: rgba(255, 215, 0, 0.1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        /* GRAIN & AMBIENT DEEP SEA GLOW */
+        .grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9998;
+            opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        .ambient-glow {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at center, rgba(0, 150, 255, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* ==========================================
+           ONE PIECE ANIME LOGIN OVERLAY
+           ========================================== */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #020813;
+            /* 🏴‍☠️ DROP YOUR ONE PIECE WALLPAPER OR GIF HERE 🏴‍☠️ */
+            background-image: url('onepiece-bg.gif');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 50000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), visibility 1s;
+        }
+
+        /* Dark overlay to make the card pop against any bright anime background */
+        .login-overlay::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.9) 100%);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 0;
+        }
+
+        .login-card {
+            position: relative;
+            z-index: 10;
+            background: rgba(5, 10, 20, 0.7);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-top: 1px solid rgba(255, 215, 0, 0.5);
+            border-radius: 20px;
+            padding: 50px 40px;
+            width: 90%;
+            max-width: 420px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 0, 85, 0.2);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            /* Ship Bobbing Animation */
+            animation: shipBob 6s ease-in-out infinite;
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s, filter 0.8s;
+        }
+
+        .login-card.fade-out {
+            transform: translateY(-100px) scale(1.1);
+            opacity: 0;
+            filter: blur(20px);
+            animation: none;
+            /* Stop bobbing when fading out */
+        }
+
+        /* The Animated Jolly Roger / Haki Skull */
+        .skull-icon-wrapper {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .skull-haki-ring {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid var(--haki-glow);
+            animation: hakiRipple 1.5s linear infinite;
+        }
+
+        .fa-skull-crossbones {
+            font-size: 3.5rem;
+            color: #fff;
+            text-shadow: 0 0 20px var(--haki-glow), 0 0 40px var(--haki-glow);
+            animation: heartbeat 2s infinite;
+            z-index: 2;
+        }
+
+        .login-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+            color: var(--accent);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .login-subtitle {
+            font-size: 0.95rem;
+            color: #a0a0a5;
+            margin-bottom: 40px;
+            font-weight: 500;
+            font-style: italic;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent);
+            opacity: 0.8;
+            font-size: 1.1rem;
+        }
+
+        .login-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 18px 20px 18px 55px;
+            color: #fff;
+            font-size: 1.1rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .login-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+        }
+
+        .login-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .auth-btn {
+            width: 100%;
+            background: linear-gradient(45deg, #cc0044, var(--haki-glow));
+            color: #fff;
+            border: none;
+            padding: 18px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(255, 0, 85, 0.4);
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(255, 0, 85, 0.6), 0 0 20px var(--accent);
+            background: linear-gradient(45deg, var(--haki-glow), #ff3333);
+        }
+
+        .auth-btn:active {
+            transform: translateY(0);
+        }
+
+        /* ==========================================
+           MAIN APP STYLES (Post-Login)
+           ========================================== */
+        .scroll-section {
+            height: 110vh;
+            position: relative;
+        }
+
+        .sticky-content {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .scrub-text {
+            transform: scale(var(--scale, 0.8)) translateY(var(--y, 50px));
+            opacity: var(--opacity, 0);
+            will-change: transform, opacity;
+        }
+
+        h1 {
+            font-size: 8vw;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            background: linear-gradient(180deg, var(--accent) 0%, var(--haki-glow) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            font-size: 2vw;
+            color: var(--text-muted);
+            font-weight: 500;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* BUDGET GRID */
+        .budget-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            width: 90%;
+            max-width: 1000px;
+            margin-top: 40px;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: left;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            transition: transform 0.3s;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.1);
+        }
+
+        .glass-card h3 {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .glass-card .amount {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #fff;
+            font-family: 'Space Grotesk', monospace;
+            transition: color 0.3s;
+        }
+
+        .glass-card .danger {
+            color: var(--haki-glow);
+        }
+
+        .glass-card .safe {
+            color: var(--accent);
+        }
+
+        .quick-add-container {
+            margin-top: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            transition: 0.3s;
+        }
+
+        .quick-add-container:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+        }
+
+        .quick-add-container input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 1.2rem;
+            width: 120px;
+            font-weight: bold;
+        }
+
+        .quick-add-container input::placeholder {
+            color: rgba(255, 255, 255, 0.2);
+            font-weight: normal;
+        }
+
+        .add-btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 800;
+            transition: 0.2s;
+            text-transform: uppercase;
+        }
+
+        .add-btn:hover {
+            background: #fff;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--accent);
+        }
+
+        /* LOGO STYLES (Top Left Fixed) */
+        .brand-logo {
+            position: fixed;
+            top: 30px;
+            left: 40px;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            color: var(--accent);
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: opacity 1.2s ease, transform 1.2s ease;
+        }
+
+        .brand-logo i {
+            font-size: 2rem;
+            color: var(--accent);
+            text-shadow: 0 0 15px var(--accent);
+            animation: pulseFast 2s infinite alternate;
+        }
+
+        .brand-logo.reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* REVEAL SEQUENCE FOR SEC-1 */
+        .scrub-text h1, .scrub-text .subtitle {
+            transition: opacity 1.5s cubic-bezier(0.16, 1, 0.3, 1), transform 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .sec-intro-hidden h1, .sec-intro-hidden .subtitle {
+            opacity: 0;
+            transform: translateY(50px);
+        }
+
+        /* THEME BOX UI */
+        .theme-box {
+            position: fixed;
+            bottom: 30px;
+            left: 40px;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .theme-toggle {
+            background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-muted);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            outline: none;
+        }
+
+        .theme-toggle:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .theme-options {
+            display: flex;
+            gap: 10px;
+            opacity: 0;
+            transform: translateX(-20px);
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .theme-options.show {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+
+        .theme-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid rgba(255,255,255,0.2);
+            transition: transform 0.2s;
+        }
+
+        .theme-btn:hover {
+            transform: scale(1.2);
+            border-color: #fff;
+        }
+
+        #theme-transition-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at center, var(--accent) 0%, var(--haki-glow) 100%);
+            z-index: 100001;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease-out;
+            mix-blend-mode: screen;
+        }
+
+        #theme-transition-overlay.flash {
+            opacity: 0.9;
+            transition: opacity 0.1s ease-in;
+        }
+
+        /* THE APP INTERFACE */
+        .app-container {
+            width: 90%;
+            max-width: 1000px;
+            height: 85vh;
+            background: var(--glass);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid rgba(255, 215, 0, 0.15);
+            border-radius: 20px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* HEADER & VOICE SELECTOR */
+        .app-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .app-title {
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--accent);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .voice-menu-container {
+            position: relative;
+        }
+
+        .voice-toggle {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+
+        .voice-toggle:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .voice-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            background: rgba(10, 15, 20, 0.95);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 8px;
+            width: 200px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+        }
+
+        .voice-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .voice-item {
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-align: left;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .voice-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .voice-item.active, .lang-item.active {
+            background: rgba(255, 215, 0, 0.15);
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .voice-item.active::after, .lang-item.active::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+        }
+        
+        .lang-item {
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-align: left;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .lang-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        /* ORB STAGE (Now a glowing bounty coin/log pose) */
+        .visualizer-stage {
+            height: 35%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 60px;
+            position: relative;
+        }
+
+        .orb {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            z-index: 2;
+            background: radial-gradient(circle at 30% 30%, #fff, var(--accent), var(--haki-glow));
+            box-shadow: 0 0 40px var(--glass-border), inset 0 0 20px rgba(255, 255, 255, 0.6);
+            transition: all 0.5s ease;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .orb.idle {
+            animation: floatOrb 5s ease-in-out infinite;
+        }
+
+        .orb.thinking {
+            animation: pulseFast 1s infinite alternate;
+            filter: hue-rotate(-40deg);
+            box-shadow: 0 0 60px rgba(255, 0, 85, 0.6);
+            border-color: var(--haki-glow);
+        }
+
+        .orb.speaking {
+            animation: ripple 0.8s infinite alternate;
+        }
+
+        .status-text {
+            margin-top: 25px;
+            font-size: 0.85rem;
+            letter-spacing: 0.2em;
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* CHAT AREA */
+        .chat-area {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .bubble {
+            max-width: 75%;
+            padding: 18px 24px;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            line-height: 1.5;
+            font-weight: 500;
+            animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            transform: translateY(20px);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .bubble.ai {
+            align-self: flex-start;
+            background: rgba(0, 0, 0, 0.4);
+            color: #fff;
+            border-bottom-left-radius: 4px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            border-left: 3px solid var(--accent);
+        }
+
+        .bubble.user {
+            align-self: flex-end;
+            background: var(--text-main);
+            color: #000;
+            border-bottom-right-radius: 4px;
+            border-right: 3px solid #000;
+        }
+
+        .bubble.attachment {
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        /* INPUT AREA */
+        .input-area {
+            padding: 24px 40px;
+            background: rgba(0, 0, 0, 0.6);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .input-pill {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 12px;
+            padding: 8px;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+        }
+
+        .input-pill:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+        }
+
+        .upload-btn {
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            transition: 0.2s;
+        }
+
+        .upload-btn:hover {
+            color: var(--accent);
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .input-pill input[type="text"] {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 1.1rem;
+            outline: none;
+            padding: 0 15px;
+        }
+
+        .send-btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            background: #fff;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+        }
+
+        /* KEYFRAMES */
+        @keyframes shipBob {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            25% {
+                transform: translateY(-8px) rotate(0.5deg);
+            }
+
+            75% {
+                transform: translateY(5px) rotate(-0.5deg);
+            }
+        }
+
+        @keyframes hakiRipple {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            100% {
+                transform: scale(1.8);
+                opacity: 0;
+            }
+        }
+
+        @keyframes heartbeat {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            15% {
+                transform: scale(1.15);
+            }
+
+            30% {
+                transform: scale(1);
+            }
+
+            45% {
+                transform: scale(1.15);
+            }
+        }
+
+        @keyframes floatOrb {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-15px);
+                box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+            }
+        }
+
+        @keyframes pulseFast {
+            from {
+                transform: scale(0.95);
+                opacity: 0.8;
+            }
+
+            to {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes ripple {
+            from {
+                transform: scale(1);
+            }
+
+            to {
+                transform: scale(1.2);
+                filter: brightness(1.5);
+                box-shadow: 0 0 60px rgba(255, 215, 0, 0.8);
+            }
+        }
+
+        @keyframes fadeUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="cursor-dot"></div>
+    <div class="cursor-ring"></div>
+    <div class="grain"></div>
+    <div class="ambient-glow"></div>
+    
+    <div id="theme-transition-overlay"></div>
+
+    <!-- Floating Theme Box -->
+    <div class="theme-box">
+        <button class="theme-toggle" id="theme-btn" title="Change Theme"><i class="fas fa-palette"></i></button>
+        <div class="theme-options" id="theme-options">
+            <div class="theme-btn" data-theme="default" style="background: linear-gradient(45deg, #ffd700, #ff0055);"></div>
+            <div class="theme-btn" data-theme="cyber" style="background: linear-gradient(45deg, #00ffff, #8a2be2);"></div>
+            <div class="theme-btn" data-theme="emerald" style="background: linear-gradient(45deg, #00ff66, #eaff00);"></div>
+            <div class="theme-btn" data-theme="crimson" style="background: linear-gradient(45deg, #ff3333, #ffaa00);"></div>
+        </div>
+    </div>
+
+    <div class="brand-logo" id="main-logo">
+        <i class="fa-solid fa-coins"></i> OG.sys
+    </div>
+
+    <div class="login-overlay" id="login-overlay">
+        <div class="login-card" id="login-card">
+
+            <div class="skull-icon-wrapper">
+                <div class="skull-haki-ring"></div>
+                <i class="fa-solid fa-skull-crossbones"></i>
+            </div>
+
+            <h2 class="login-title">GRAND LINE DB</h2>
+            <p class="login-subtitle">Verify identity, pirate. Let's see your bounty.</p>
+
+            <div class="input-group">
+                <i class="fas fa-user-ninja"></i>
+                <input type="text" class="login-input" id="login-user" placeholder="Pirate Alias" autocomplete="off">
+            </div>
+            <div class="input-group">
+                <i class="fas fa-key"></i>
+                <input type="password" class="login-input" id="login-pass" placeholder="Transponder Snail Code">
+            </div>
+
+            <button class="auth-btn" id="auth-btn">Claim Bounty</button>
+        </div>
+    </div>
+
+    <section class="scroll-section" id="sec-1">
+        <div class="sticky-content">
+            <div class="scrub-text sec-intro-hidden" id="meet-og-text">
+                <h1>Meet OG.</h1>
+                <p class="subtitle">The unapologetic financial guardian designed to stop you from going broke.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="scroll-section" id="sec-2">
+        <div class="sticky-content">
+            <div class="scrub-text">
+                <h1 style="font-size: 5vw;">The Damage Log.</h1>
+                <p class="subtitle">Live look at the berries you've burned this month.</p>
+
+                <div class="budget-grid">
+                    <div class="glass-card">
+                        <h3>Total Burned</h3>
+                        <div class="amount danger" id="val-burned">฿ 42,500</div>
+                    </div>
+                    <div class="glass-card">
+                        <h3>Safe to Spend</h3>
+                        <div class="amount safe" id="val-safe">฿ 3,200</div>
+                    </div>
+                    <div class="glass-card">
+                        <h3>Taverns & Meat</h3>
+                        <div class="amount danger">฿ 14,000</div>
+                    </div>
+                </div>
+
+                <div class="quick-add-container">
+                    <i class="fas fa-coins" style="color: var(--accent);"></i>
+                    <input type="number" id="quick-amt" placeholder="Amount (฿)">
+                    <button class="add-btn" id="log-expense-btn">Log Expense</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="sec-3" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; position: relative; z-index: 10;">
+        <div class="app-container">
+
+                <div class="app-header">
+                    <span class="app-title"><i class="fa-solid fa-anchor"></i> OG.sys Terminal</span>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="voice-menu-container" id="lang-menu-container">
+                            <button class="voice-toggle" id="lang-toggle">
+                                <i class="fas fa-globe"></i> <span id="active-lang-label">English</span>
+                            </button>
+                            <div class="voice-dropdown" id="lang-dropdown">
+                                <div class="lang-item active" data-lang="english">English</div>
+                                <div class="lang-item" data-lang="hindi">Hindi</div>
+                                <div class="lang-item" data-lang="bengali">Bengali</div>
+                                <div class="lang-item" data-lang="japanese">Japanese</div>
+                            </div>
+                        </div>
+                        <div class="voice-menu-container">
+                        <button class="voice-toggle" id="voice-toggle">
+                            <i class="fas fa-microphone-alt"></i> <span id="active-voice-label">Onyx (Deep)</span>
+                        </button>
+                        <div class="voice-dropdown" id="voice-dropdown">
+                            <div class="voice-item active" data-voice="onyx">Onyx (Deep)</div>
+                            <div class="voice-item" data-voice="nova">Nova (Energetic)</div>
+                            <div class="voice-item" data-voice="echo">Echo (Neutral)</div>
+                            <div class="voice-item" data-voice="shimmer">Shimmer (Soft)</div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+
+                <div class="visualizer-stage">
+                    <div class="orb idle" id="og-orb"></div>
+                    <div class="status-text" id="status-text">LOG POSE: LISTENING</div>
+                </div>
+
+                <div class="chat-area" id="chat-flow">
+                </div>
+
+                <div class="input-area">
+                    <div class="input-pill">
+                        <input type="file" id="file-upload" hidden accept="image/*,application/pdf">
+                        <button class="upload-btn clickable-item" id="trigger-upload" title="Upload Ledger"><i
+                                class="fas fa-scroll"></i></button>
+
+                        <input type="text" id="user-in" placeholder="e.g., Spent ฿200 on Sanji's cooking..."
+                            autocomplete="off">
+                        <button class="send-btn clickable-item" id="send-btn"><i class="fas fa-arrow-up"></i></button>
+                    </div>
+                </div>
+
+            </div>
+    </section>
+
+    <script>
+        // --- CUSTOM CURSOR ---
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorRing = document.querySelector('.cursor-ring');
+        let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+
+        function animateCursor() {
+            ringX += (mouseX - ringX) * 0.15;
+            ringY += (mouseY - ringY) * 0.15;
+            cursorDot.style.transform = `translate(${mouseX}px, ${mouseY}px)`;
+            cursorRing.style.transform = `translate(${ringX}px, ${ringY}px)`;
+            requestAnimationFrame(animateCursor);
+        }
+        window.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
+        animateCursor();
+
+        const interactables = document.querySelectorAll('button, input, .glass-card, .voice-item, .voice-toggle');
+        interactables.forEach(el => {
+            el.addEventListener('mouseenter', () => cursorRing.classList.add('hover-active'));
+            el.addEventListener('mouseleave', () => cursorRing.classList.remove('hover-active'));
+        });
+
+        // --- LOGIN TRANSITION ---
+        const authBtn = document.getElementById('auth-btn');
+        const loginOverlay = document.getElementById('login-overlay');
+        const loginCard = document.getElementById('login-card');
+        const loginUser = document.getElementById('login-user');
+        const loginPass = document.getElementById('login-pass');
+        const chatFlow = document.getElementById('chat-flow');
+
+        authBtn.addEventListener('click', () => {
+            if (loginUser.value.trim() === '' || loginPass.value.trim() === '') {
+                authBtn.innerText = "Error: Invalid Haki";
+                authBtn.style.background = "var(--danger)";
+                authBtn.style.color = "#fff";
+                setTimeout(() => {
+                    authBtn.innerText = "Claim Bounty";
+                    authBtn.style.background = "linear-gradient(45deg, #cc0044, var(--haki-glow))";
+                }, 1500);
+                return;
+            }
+
+            authBtn.innerHTML = '<i class="fas fa-compass fa-spin"></i> Setting Sail...';
+
+            setTimeout(() => {
+                loginCard.classList.add('fade-out');
+                loginOverlay.style.opacity = '0';
+                loginOverlay.style.visibility = 'hidden';
+                document.body.style.overflowY = 'auto'; // Unlock scrolling
+
+                // Trigger Logo & Meet OG Reveal
+                document.getElementById('main-logo').classList.add('reveal');
+                document.getElementById('meet-og-text').classList.remove('sec-intro-hidden');
+
+                // Trigger OG's first message
+                setTimeout(() => {
+                    chatFlow.innerHTML = `<div class="bubble ai">Log Pose locked. Identity verified. Drop your spending habits here, and I'll tell you why you'll never find the One Piece.</div>`;
+                }, 500);
+            }, 1000);
+        });
+
+
+        // --- APPLE SCROLL SCRUBBING (SMOOTH LERPED) ---
+        const scrollSections = document.querySelectorAll('.scroll-section');
+        const targetProgress = new Array(scrollSections.length).fill(0);
+        const currentProgress = new Array(scrollSections.length).fill(0);
+
+        function updateScrollTargets() {
+            const windowHeight = window.innerHeight;
+            scrollSections.forEach((sec, i) => {
+                const rect = sec.getBoundingClientRect();
+                let scrollRange = rect.height - windowHeight;
+                if (scrollRange <= 0) scrollRange = 1; // prevent div by zero
+                let progress = -rect.top / scrollRange;
+                targetProgress[i] = Math.max(0, Math.min(1, progress));
+            });
+        }
+
+        window.addEventListener('scroll', updateScrollTargets, { passive: true });
+        window.addEventListener('resize', updateScrollTargets);
+
+        function renderScrubbing() {
+            scrollSections.forEach((sec, i) => {
+                currentProgress[i] += (targetProgress[i] - currentProgress[i]) * 0.1;
+                const progress = currentProgress[i];
+                const scrubText = sec.querySelector('.scrub-text');
+                if (!scrubText) return;
+
+                let opacity = 1; let scale = 1; let y = 0;
+
+                if (progress < 0.2) { 
+                    if (i === 0) {
+                        opacity = 1; scale = 1; y = 0;
+                    } else {
+                        opacity = progress / 0.2; 
+                        scale = 0.9 + (progress * 0.5); 
+                        y = 50 - (progress * 250); 
+                    }
+                } else if (progress > 0.8) { 
+                    let exitProgress = (progress - 0.8) / 0.2; 
+                    opacity = 1 - exitProgress; 
+                    scale = 1 + (exitProgress * 0.05); 
+                    y = -(exitProgress * 50); 
+                }
+
+                scrubText.style.setProperty('--scale', scale); 
+                scrubText.style.setProperty('--opacity', opacity); 
+                scrubText.style.setProperty('--y', `${y}px`);
+            });
+            requestAnimationFrame(renderScrubbing);
+        }
+
+        updateScrollTargets();
+        renderScrubbing();
+
+        // --- VOICE & LANG SELECTOR LOGIC ---
+        let currentVoice = 'onyx';
+        let currentLang = 'english';
+        const voiceToggle = document.getElementById('voice-toggle');
+        const langToggle = document.getElementById('lang-toggle');
+        const voiceDropdown = document.getElementById('voice-dropdown');
+        const langDropdown = document.getElementById('lang-dropdown');
+        const voiceItems = document.querySelectorAll('.voice-item');
+        const langItems = document.querySelectorAll('.lang-item');
+        const activeVoiceLabel = document.getElementById('active-voice-label');
+        const activeLangLabel = document.getElementById('active-lang-label');
+
+        voiceToggle.addEventListener('click', (e) => { e.stopPropagation(); voiceDropdown.classList.toggle('show'); langDropdown.classList.remove('show'); });
+        langToggle.addEventListener('click', (e) => { e.stopPropagation(); langDropdown.classList.toggle('show'); voiceDropdown.classList.remove('show'); });
+        
+        document.addEventListener('click', (e) => { 
+            if (!voiceDropdown.contains(e.target)) { voiceDropdown.classList.remove('show'); }
+            if (!langDropdown.contains(e.target)) { langDropdown.classList.remove('show'); }
+        });
+
+        voiceItems.forEach(item => {
+            item.addEventListener('click', () => {
+                voiceItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                currentVoice = item.getAttribute('data-voice');
+                activeVoiceLabel.innerText = item.innerText;
+                voiceDropdown.classList.remove('show');
+            });
+        });
+
+        langItems.forEach(item => {
+            item.addEventListener('click', () => {
+                langItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                currentLang = item.getAttribute('data-lang');
+                activeLangLabel.innerText = item.innerText;
+                langDropdown.classList.remove('show');
+            });
+        });
+
+        // --- THEME ENGINE ---
+        const themeBtn = document.getElementById('theme-btn');
+        const themeOptions = document.getElementById('theme-options');
+        const themeTransition = document.getElementById('theme-transition-overlay');
+        const themeDots = document.querySelectorAll('.theme-btn');
+
+        themeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            themeOptions.classList.toggle('show');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!themeOptions.contains(e.target) && !themeBtn.contains(e.target)) {
+                themeOptions.classList.remove('show');
+            }
+        });
+
+        themeDots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                const targetTheme = dot.getAttribute('data-theme');
+                
+                // Flash overlay
+                themeTransition.classList.add('flash');
+                themeOptions.classList.remove('show');
+                
+                setTimeout(() => {
+                    // Switch theme halfway through flash
+                    document.body.className = targetTheme === 'default' ? '' : `theme-${targetTheme}`;
+                    
+                    setTimeout(() => {
+                        themeTransition.classList.remove('flash');
+                    }, 50);
+                }, 150);
+            });
+        });
+
+        // --- ADD MONEY LOGIC ---
+        let totalBurned = 42500; let safeToSpend = 3200;
+        const valBurned = document.getElementById('val-burned'); const valSafe = document.getElementById('val-safe');
+
+        document.getElementById('log-expense-btn').addEventListener('click', () => {
+            const inputEl = document.getElementById('quick-amt'); const amt = parseInt(inputEl.value);
+            if (!amt || isNaN(amt)) return;
+            totalBurned += amt; safeToSpend -= amt;
+            valBurned.innerText = `฿ ${totalBurned.toLocaleString('en-IN')}`;
+            if (safeToSpend < 0) { valSafe.className = "amount danger"; valSafe.innerText = `-฿ ${Math.abs(safeToSpend).toLocaleString('en-IN')}`; }
+            else { valSafe.className = "amount safe"; valSafe.innerText = `฿ ${safeToSpend.toLocaleString('en-IN')}`; }
+            inputEl.value = '';
+            valBurned.style.transform = "scale(1.1)"; setTimeout(() => { valBurned.style.transform = "scale(1)"; }, 200);
+        });
+
+        // --- THE APP LOGIC ---
+        const userInput = document.getElementById('user-in');
+        const sendBtn = document.getElementById('send-btn');
+        const orb = document.getElementById('og-orb');
+        const statusText = document.getElementById('status-text');
+
+        const fileInput = document.getElementById('file-upload');
+        const triggerUpload = document.getElementById('trigger-upload');
+
+        function setOrbState(state, text) { orb.className = `orb ${state}`; statusText.innerText = text; }
+
+        triggerUpload.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                const fileName = e.target.files[0].name;
+                chatFlow.innerHTML += `<div class="bubble user attachment"><i class="fas fa-file-invoice"></i> Uploaded Poneglyph: ${fileName}</div>`;
+                chatFlow.scrollTop = chatFlow.scrollHeight;
+                setOrbState('thinking', 'TRANSLATING PONEGLYPH...');
+                setTimeout(() => {
+                    const aiBubble = document.createElement('div'); aiBubble.className = 'bubble ai';
+                    aiBubble.innerText = "Scanning document... Oh look, another bounty fee you could have avoided.";
+                    chatFlow.appendChild(aiBubble); chatFlow.scrollTop = chatFlow.scrollHeight;
+                    setOrbState('idle', 'LOG POSE: LISTENING');
+                }, 2000);
+            }
+        });
+
+        async function processMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            userInput.value = '';
+            chatFlow.innerHTML += `<div class="bubble user">${text}</div>`;
+            chatFlow.scrollTop = chatFlow.scrollHeight;
+
+            setOrbState('thinking', 'ANALYZING THREAT LEVEL...');
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/ask-og', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text, voice: currentVoice, language: currentLang })
+                });
+
+                if (!response.ok) throw new Error("Server error");
+                const data = await response.json();
+
+                const aiBubble = document.createElement('div');
+                aiBubble.className = 'bubble ai';
+                chatFlow.appendChild(aiBubble);
+
+                let i = 0;
+                const reply = data.response || "Silence.";
+
+                const typing = setInterval(() => {
+                    aiBubble.textContent += reply[i];
+                    i++;
+                    chatFlow.scrollTop = chatFlow.scrollHeight;
+                    if (i >= reply.length) clearInterval(typing);
+                }, 20);
+
+                if (data.audio) {
+                    setOrbState('speaking', 'OG IS SPEAKING');
+                    const audio = new Audio("data:audio/mp3;base64," + data.audio);
+                    audio.play().catch(err => {
+                        console.warn("Browser Autoplay Blocked:", err);
+                        setOrbState('idle', 'LOG POSE: LISTENING (AUDIO BLOCKED)');
+                    });
+                    audio.onended = () => { setOrbState('idle', 'LOG POSE: LISTENING'); };
+                } else {
+                    setOrbState('idle', 'LOG POSE: LISTENING');
+                }
+
+            } catch (err) {
+                console.error(err);
+                setOrbState('idle', 'TRANSCEIVER SIGNAL LOST');
+                chatFlow.innerHTML += `<div class="bubble ai" style="color: #ff3333; border-color: #ff3333;">Transponder snail died. Is the Python server running?</div>`;
+                chatFlow.scrollTop = chatFlow.scrollHeight;
+            }
+        }
+
+        sendBtn.addEventListener('click', processMessage);
+        userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') processMessage(); });
+    </script>
+</body>
+
+</html>
